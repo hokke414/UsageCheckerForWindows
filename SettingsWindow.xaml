@@ -1,0 +1,69 @@
+<Window x:Class="AIUsageChecker.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AI Usage Checker 設定" Width="660" Height="760" MinWidth="580" MinHeight="620"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize" ShowInTaskbar="False"
+        Background="{StaticResource AppBackground}" Foreground="{StaticResource TextPrimary}"
+        Icon="Assets/app-icon.ico">
+  <Grid Margin="28">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/><RowDefinition Height="16"/><RowDefinition Height="*"/><RowDefinition Height="16"/><RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <StackPanel>
+      <TextBlock Text="設定" FontSize="28" FontWeight="Bold"/>
+      <TextBlock Text="表示するAIと自動取得の接続を管理します。" Foreground="{StaticResource TextSecondary}" Margin="0,6,0,0" LineHeight="21"/>
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+        <TextBlock Text="ダッシュボードに表示" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
+        <ItemsControl ItemsSource="{Binding ProviderOptions}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,8">
+                <CheckBox IsChecked="{Binding IsVisible}" AutomationProperties.Name="{Binding Name}">
+                  <StackPanel>
+                    <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0" TextWrapping="Wrap" LineHeight="21"/>
+                  </StackPanel>
+                </CheckBox>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TextBlock Text="Notion AI 接続" FontSize="18" FontWeight="Bold" Margin="0,18,0,6"/>
+        <TextBlock Text="Notionにログイン後、使用量リクエストのCopy as cURL、Cookieヘッダー、またはtoken_v2を貼り付けます。Windows資格情報として暗号化保存します。"
+                   Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21" Margin="0,0,0,12"/>
+        <PasswordBox x:Name="NotionTokenBox" MinHeight="44" Padding="12,10" Background="{StaticResource Surface}" Foreground="{StaticResource TextPrimary}"
+                     BorderBrush="{StaticResource Border}" PasswordChar="●" AutomationProperties.Name="Notion接続情報"/>
+        <TextBlock Text="ワークスペースID（複数ある場合のみ・省略可）" Foreground="{StaticResource TextSecondary}" Margin="0,12,0,6"/>
+        <TextBox Text="{Binding NotionWorkspaceId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="NotionワークスペースID"/>
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+          <Button Style="{StaticResource PrimaryButton}" Content="Notionにログイン" Click="LoginNotion_Click" Margin="0,0,8,0"/>
+          <Button Style="{StaticResource SecondaryButton}" Content="ブラウザで開く" Click="OpenNotion_Click" Margin="0,0,8,0"/>
+          <Button Style="{StaticResource SecondaryButton}" Content="接続解除" Click="DisconnectNotion_Click"/>
+        </StackPanel>
+        <TextBlock Text="{Binding NotionStatus}" Foreground="{StaticResource TextSecondary}" Margin="0,8,0,0"/>
+
+        <TextBlock Text="Gemini 自動取得" FontSize="18" FontWeight="Bold" Margin="0,24,0,6"/>
+        <TextBlock Text="Gemini Appsの5時間・週次枠をアプリ内ログインから取得します。Gemini CLIのOAuthクォータもフォールバックとして利用できます。"
+                   Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21"/>
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+          <Button Style="{StaticResource PrimaryButton}" Content="Geminiにログイン" Click="LoginGemini_Click" Margin="0,0,8,0"/>
+          <Button Style="{StaticResource SecondaryButton}" Content="Gemini CLIを起動" Click="OpenGemini_Click"/>
+        </StackPanel>
+        <TextBlock Text="{Binding GeminiStatus}" Foreground="{StaticResource TextSecondary}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+
+        <TextBlock Text="{Binding ErrorText}" Foreground="#B4002A" TextWrapping="Wrap" Margin="0,16,0,0" LineHeight="21"/>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Grid Grid.Row="4">
+      <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="8"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="キャンセル" Click="Cancel_Click" MinWidth="96"/>
+      <Button Grid.Column="3" Style="{StaticResource PrimaryButton}" Content="保存" Click="Save_Click" MinWidth="96"/>
+    </Grid>
+  </Grid>
+</Window>

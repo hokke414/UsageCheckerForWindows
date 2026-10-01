@@ -1,0 +1,30 @@
+# Build outputs
+bin/
+obj/
+artifacts/
+publish/
+tools/**/bin/
+tools/**/obj/
+
+# IDE and user-local state
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local credentials, profiles, and logs
+*.pfx
+*.snk
+*.log
+usage.json
+connections.json
+AIUsageChecker.exe.WebView2/
+WebView2/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
