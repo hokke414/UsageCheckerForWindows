@@ -7,9 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>AIUsageChecker</AssemblyName>
     <RootNamespace>AIUsageChecker</RootNamespace>
-    <Version>1.2.0</Version>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <FileVersion>1.2.0.0</FileVersion>
+    <Version>1.3.0</Version>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <FileVersion>1.3.0.0</FileVersion>
     <Product>AI Usage Checker for Windows</Product>
     <Company>AI Usage Checker contributors</Company>
     <Authors>AI Usage Checker contributors</Authors>

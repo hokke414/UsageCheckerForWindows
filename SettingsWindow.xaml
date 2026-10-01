@@ -23,10 +23,7 @@
             <DataTemplate>
               <Border Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,8">
                 <CheckBox IsChecked="{Binding IsVisible}" AutomationProperties.Name="{Binding Name}">
-                  <StackPanel>
-                    <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource TextSecondary}" Margin="0,4,0,0" TextWrapping="Wrap" LineHeight="21"/>
-                  </StackPanel>
+                  <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
                 </CheckBox>
               </Border>
             </DataTemplate>

@@ -10,10 +10,12 @@
     <SolidColorBrush x:Key="Border" Color="#949DB2"/>
     <SolidColorBrush x:Key="TextPrimary" Color="#1A1A1C"/>
     <SolidColorBrush x:Key="TextSecondary" Color="#626264"/>
-    <SolidColorBrush x:Key="Primary" Color="#0017C1"/>
-    <SolidColorBrush x:Key="PrimaryHover" Color="#000082"/>
-    <SolidColorBrush x:Key="PrimarySoft" Color="#E8F1FE"/>
-    <SolidColorBrush x:Key="Focus" Color="#FFD43D"/>
+    <SolidColorBrush x:Key="Primary" Color="#D9E6FF"/>
+    <SolidColorBrush x:Key="PrimaryHover" Color="#C5D7FF"/>
+    <SolidColorBrush x:Key="PrimaryPressed" Color="#AFC8FF"/>
+    <SolidColorBrush x:Key="PrimaryText" Color="#00118F"/>
+    <SolidColorBrush x:Key="PrimarySoft" Color="#EEF4FF"/>
+    <SolidColorBrush x:Key="Focus" Color="#1A1A1C"/>
 
     <Style TargetType="TextBlock">
       <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI"/>
@@ -22,9 +24,10 @@
     </Style>
 
     <Style x:Key="PrimaryButton" TargetType="Button">
-      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
       <Setter Property="Background" Value="{StaticResource Primary}"/>
-      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="BorderBrush" Value="#7596E8"/>
+      <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="Padding" Value="18,10"/>
       <Setter Property="MinHeight" Value="44"/>
       <Setter Property="MinWidth" Value="88"/>
@@ -40,7 +43,7 @@
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{StaticResource PrimaryHover}"/></Trigger>
-              <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Opacity" Value="0.72"/></Trigger>
+              <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{StaticResource PrimaryPressed}"/></Trigger>
               <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource Focus}"/><Setter TargetName="Chrome" Property="BorderThickness" Value="3"/></Trigger>
               <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Opacity" Value="0.42"/></Trigger>
             </ControlTemplate.Triggers>
@@ -51,8 +54,8 @@
 
     <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
       <Setter Property="Background" Value="{StaticResource Surface}"/>
-      <Setter Property="Foreground" Value="{StaticResource Primary}"/>
-      <Setter Property="BorderBrush" Value="{StaticResource Primary}"/>
+      <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+      <Setter Property="BorderBrush" Value="#7596E8"/>
       <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="Padding" Value="16,9"/>
       <Setter Property="MinHeight" Value="44"/>
@@ -73,6 +76,20 @@
           </ControlTemplate>
         </Setter.Value>
       </Setter>
+    </Style>
+
+    <Style x:Key="CompactPrimaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+      <Setter Property="MinHeight" Value="36"/>
+      <Setter Property="MinWidth" Value="64"/>
+      <Setter Property="Padding" Value="12,6"/>
+      <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <Style x:Key="CompactSecondaryButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+      <Setter Property="MinHeight" Value="36"/>
+      <Setter Property="MinWidth" Value="56"/>
+      <Setter Property="Padding" Value="12,6"/>
+      <Setter Property="FontSize" Value="13"/>
     </Style>
 
     <Style TargetType="TextBox">

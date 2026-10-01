@@ -28,7 +28,7 @@ public partial class SettingsWindow : Window, INotifyPropertyChanged
         InitializeComponent();
         _providers = providers;
         foreach (var provider in providers)
-            ProviderOptions.Add(new(provider.Id, provider.Name, provider.Subtitle, provider.IsVisible));
+            ProviderOptions.Add(new(provider.Id, provider.Name, provider.IsVisible));
         DataContext = this;
         Loaded += SettingsWindow_Loaded;
     }
@@ -106,12 +106,11 @@ public partial class SettingsWindow : Window, INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
-public sealed class ProviderOption(string id, string name, string subtitle, bool isVisible) : INotifyPropertyChanged
+public sealed class ProviderOption(string id, string name, bool isVisible) : INotifyPropertyChanged
 {
     private bool _isVisible = isVisible;
     public string Id { get; } = id;
     public string Name { get; } = name;
-    public string Subtitle { get; } = subtitle;
     public bool IsVisible { get => _isVisible; set { _isVisible = value; PropertyChanged?.Invoke(this, new(nameof(IsVisible))); } }
     public event PropertyChangedEventHandler? PropertyChanged;
 }
