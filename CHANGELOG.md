@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0 - 2026-11-10
+
+- Added a manual update checker in Settings that downloads the latest Portable build, verifies its SHA-256, and swaps the running exe before relaunching.
+
 ## 1.4.0 - 2026-11-10
 
 - Updated Notion AI for the November 2026 Standard, Select, and Notion credit system: reads resolved `auto` / `flex` allowances for Standard and Select, falls back to the legacy Rolling / Monthly windows, and shows the Notion credit balance from the optional eligibility endpoint.

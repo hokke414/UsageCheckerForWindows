@@ -99,6 +99,15 @@
 
         <TextBlock Text="{Binding ApiKeyStatus}" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,4,0,0"/>
 
+        <TextBlock Text="アップデート" FontSize="18" FontWeight="Bold" Margin="0,24,0,6"/>
+        <TextBlock Text="{Binding VersionText}" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
+        <TextBlock Text="最新版があるかGitHub Releasesを確認し、ダウンロードしたexeをSHA-256で検証してから差し替えます。"
+                   Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21" Margin="0,0,0,10"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Button x:Name="UpdateCheckButton" Style="{StaticResource SecondaryButton}" Content="更新を確認" Click="CheckForUpdates_Click"/>
+        </StackPanel>
+        <TextBlock Text="{Binding UpdateStatus}" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,0"/>
+
         <TextBlock Text="{Binding ErrorText}" Foreground="#B4002A" TextWrapping="Wrap" Margin="0,16,0,0" LineHeight="21"/>
       </StackPanel>
     </ScrollViewer>

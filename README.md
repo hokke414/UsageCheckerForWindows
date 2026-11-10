@@ -20,6 +20,7 @@ Windows SmartScreenが表示される場合があります。本プロジェク�
 - Notion AIとGemini Appsのアプリ内ログイン
 - OpenCode Go、GitHub Copilot、Kimi Code、Z.ai GLMのサブスクリプション利用枠
 - OpenRouter、DeepSeekのクレジット・残高表示
+- 設定画面からの手動アップデート（SHA-256検証付き）
 - ブランドロゴ、使用率、残量、リセット時刻だけをコンパクトなカードで表示
 - オフライン時も前回の取得結果を表示
 - 予期しない終了の診断ログ
@@ -76,6 +77,10 @@ OpenCode、GitHub CLI、Kimi Code CLIの既存ログインがある場合は、�
 - DeepSeek: `DEEPSEEK_API_KEY` または `DEEPSEEK_KEY`
 
 CopilotはGitHub OAuthのローカル認証を使用するため、APIキー欄はありません。OpenCode Goの利用枠は5時間・週次・月次のうち最も使用率が高い枠をカードに表示し、内訳をツールチップに表示します。
+
+## アップデート
+
+［設定］→「アップデート」の［更新を確認］で、GitHub Releasesの最新版を確認できます。新しいバージョンがあればPortable版をダウンロードし、`SHA256SUMS.txt`のハッシュで検証したうえで実行中のexeを差し替えて再起動します。置き換えに失敗した場合は、`%LOCALAPPDATA%\AIUsageChecker\update` の新しいexeをエクスプローラーで開きます。
 
 ## プライバシー
 

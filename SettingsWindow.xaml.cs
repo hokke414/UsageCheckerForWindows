@@ -16,6 +16,7 @@ public partial class SettingsWindow : Window, INotifyPropertyChanged
     private string _notionStatus = "未接続";
     private string _geminiStatus = "ログイン情報なし";
     private string _apiKeyStatus = "未設定";
+    private string _updateStatus = "";
     private string _errorText = "";
 
     public ObservableCollection<ProviderOption> ProviderOptions { get; } = [];
@@ -24,6 +25,8 @@ public partial class SettingsWindow : Window, INotifyPropertyChanged
     public string GeminiStatus { get => _geminiStatus; set { _geminiStatus = value; OnPropertyChanged(); } }
     public string ApiKeyStatus { get => _apiKeyStatus; set { _apiKeyStatus = value; OnPropertyChanged(); } }
     public string ErrorText { get => _errorText; set { _errorText = value; OnPropertyChanged(); } }
+    public string VersionText => $"現在のバージョン: {UpdateService.CurrentVersion}";
+    public string UpdateStatus { get => _updateStatus; set { _updateStatus = value; OnPropertyChanged(); } }
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public SettingsWindow(IEnumerable<ProviderUsage> providers)
@@ -154,6 +157,43 @@ public partial class SettingsWindow : Window, INotifyPropertyChanged
         }
         catch { OpenUrl("https://github.com/google-gemini/gemini-cli"); }
     }
+    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateCheckButton.IsEnabled = false;
+        UpdateStatus = "最新版を確認しています…";
+        try
+        {
+            var info = await new UpdateService().CheckAsync();
+            if (!info.IsAvailable)
+            {
+                UpdateStatus = $"最新のバージョンです（{UpdateService.CurrentVersion}）。";
+                return;
+            }
+
+            var message = $"新しいバージョン {info.Tag} が利用可能です。\n\n更新をダウンロードして適用しますか？";
+            if (!string.IsNullOrWhiteSpace(info.Body)) message += $"\n\n{info.Body}";
+            var choice = MessageBox.Show(this, message, "アップデート", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (choice != MessageBoxResult.Yes)
+            {
+                UpdateStatus = $"新しいバージョン {info.Tag} が利用可能です。";
+                return;
+            }
+
+            UpdateStatus = "ダウンロードしています…";
+            await new UpdateService().InstallAsync(info);
+            UpdateStatus = "更新を適用しています。アプリが再起動します。";
+            Application.Current.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus = $"更新に失敗しました: {ex.Message}";
+        }
+        finally
+        {
+            UpdateCheckButton.IsEnabled = true;
+        }
+    }
+
     private void Cancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
     private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

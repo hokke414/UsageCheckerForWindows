@@ -20,12 +20,15 @@ These credentials are used only to request usage information from the correspond
 
 API keys can also be supplied through the Settings window. They are stored only in Windows Credential Manager and are never written to the usage cache or repository.
 
+When you press 更新を確認 in Settings, the app calls the GitHub Releases API for this repository to compare versions. It does not send any local data or credentials; only a plain HTTPS request to `api.github.com` is made, and the selected Portable build is downloaded from the release assets.
+
 ## Data the app stores
 
 - Usage cache, display choices, and non-secret connection settings: `%LOCALAPPDATA%\AIUsageChecker`
 - Notion `token_v2`: Windows Credential Manager under `AIUsageChecker/Notion`
 - Optional API keys: Windows Credential Manager under `AIUsageChecker/ProviderApiKey/<provider>`
 - Notion and Gemini browser sessions: `%LOCALAPPDATA%\AIUsageChecker\WebView2`
+- Update downloads: `%LOCALAPPDATA%\AIUsageChecker\update` (new exe and its helper script, removed after a successful swap)
 - Crash details, if an unexpected error occurs: `%LOCALAPPDATA%\AIUsageChecker\crash.log`
 
 No credential, browser profile, cached usage value, or crash log is included in the source repository or Release executables.
