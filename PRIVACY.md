@@ -10,14 +10,21 @@ When a provider is visible and automatic checking is enabled, the app may read a
 - Claude Code: `%USERPROFILE%\.claude\.credentials.json`
 - Cursor and Grok Bot: `%APPDATA%\Cursor\User\globalStorage\state.vscdb`
 - Gemini CLI: `%USERPROFILE%\.gemini\oauth_creds.json`
+- OpenCode: `%LOCALAPPDATA%\opencode\auth.json`, `%APPDATA%\opencode\auth.json`, or `%USERPROFILE%\.local\share\opencode\auth.json`
+- GitHub Copilot / GitHub CLI: OpenCode's `github-copilot` auth entry or `%APPDATA%\GitHub CLI\hosts.yml`
+- Kimi Code CLI: `%USERPROFILE%\.kimi-code\credentials\kimi-code.json` or `%USERPROFILE%\.kimi\credentials\kimi-code.json`
+- Z.ai / GLM: OpenCode auth entries such as `zai-coding-plan`, or local key files under `%USERPROFILE%\.config`
 - Notion and Gemini Apps: a separate WebView2 profile created by this app
 
 These credentials are used only to request usage information from the corresponding provider. The app does not send them to the project author or to any unrelated service.
+
+API keys can also be supplied through the Settings window. They are stored only in Windows Credential Manager and are never written to the usage cache or repository.
 
 ## Data the app stores
 
 - Usage cache, display choices, and non-secret connection settings: `%LOCALAPPDATA%\AIUsageChecker`
 - Notion `token_v2`: Windows Credential Manager under `AIUsageChecker/Notion`
+- Optional API keys: Windows Credential Manager under `AIUsageChecker/ProviderApiKey/<provider>`
 - Notion and Gemini browser sessions: `%LOCALAPPDATA%\AIUsageChecker\WebView2`
 - Crash details, if an unexpected error occurs: `%LOCALAPPDATA%\AIUsageChecker\crash.log`
 
@@ -25,7 +32,7 @@ No credential, browser profile, cached usage value, or crash log is included in 
 
 ## Remove local data
 
-Use the app's Notion disconnect button first. Then close the app and delete `%LOCALAPPDATA%\AIUsageChecker`. If needed, remove the `AIUsageChecker/Notion` generic credential in Windows Credential Manager.
+Use the app's Notion disconnect button and each API-key 解除 button first. Then close the app and delete `%LOCALAPPDATA%\AIUsageChecker`. If needed, remove the `AIUsageChecker/Notion` and `AIUsageChecker/ProviderApiKey/*` generic credentials in Windows Credential Manager.
 
 ## Provider APIs
 

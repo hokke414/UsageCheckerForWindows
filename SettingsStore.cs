@@ -64,17 +64,25 @@ public sealed class SettingsStore
             latest.AutoDetail = current.AutoDetail;
             latest.LastAutoChecked = current.LastAutoChecked;
             latest.IsVisible = current.IsVisible;
+            latest.IsBalanceOnly = current.IsBalanceOnly;
+            latest.ShowProgress = current.ShowProgress;
         }
         return defaults;
     }
 
     private static List<ProviderUsage> Defaults() =>
     [
-        new() { Id="notion", Name="Notion AI", Accent="#1A1A1C", Unit="%", WindowLabel="6時間枠 / 月次枠" },
+        new() { Id="notion", Name="Notion AI", Accent="#1A1A1C", Unit="%", WindowLabel="Standard / Select / Notion" },
         new() { Id="claude", Name="Claude", Accent="#A3512F", Unit="%", WindowLabel="5時間枠 / 週次枠" },
         new() { Id="chatgpt", Name="ChatGPT / Codex", Accent="#1A1A1C", Unit="%", WindowLabel="モデル別 / 5時間・週次" },
         new() { Id="cursor", Name="Cursor", Accent="#1A1A1C", Unit="USD", WindowLabel="月次の含有使用量" },
         new() { Id="grok", Name="Grok Bot (Cursor)", Accent="#1A1A1C", Unit="%", WindowLabel="Grok Bot週次枠" },
-        new() { Id="gemini", Name="Gemini", Accent="#3451B2", Unit="%", WindowLabel="5時間枠 / 週次枠" }
+        new() { Id="gemini", Name="Gemini", Accent="#3451B2", Unit="%", WindowLabel="5時間枠 / 週次枠" },
+        new() { Id="opencode", Name="OpenCode Go", Accent="#1A1A1C", Unit="%", WindowLabel="5時間 / 週次 / 月次", IsVisible=true },
+        new() { Id="copilot", Name="GitHub Copilot", Accent="#1A1A1C", Unit="%", WindowLabel="Premium / Chat", IsVisible=true },
+        new() { Id="kimi", Name="Kimi Code", Accent="#1A1A1C", Unit="%", WindowLabel="5時間 / 週次 / 月次", IsVisible=true },
+        new() { Id="zai", Name="Z.ai GLM", Accent="#1A1A1C", Unit="%", WindowLabel="5時間 / 週次 / MCP", IsVisible=true },
+        new() { Id="openrouter", Name="OpenRouter", Accent="#64748B", Unit="%", WindowLabel="クレジット", IsVisible=false },
+        new() { Id="deepseek", Name="DeepSeek", Accent="#5786FE", Unit="USD", WindowLabel="残高", IsVisible=false }
     ];
 }

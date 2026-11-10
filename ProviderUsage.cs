@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using System.Windows;
 using System.Windows.Media;
 
 namespace AIUsageChecker;
@@ -14,30 +15,58 @@ public sealed class ProviderUsage : INotifyPropertyChanged
         ["chatgpt"] = Geometry.Parse("M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"),
         ["cursor"] = Geometry.Parse("M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23"),
         ["grok"] = Geometry.Parse("M210.484 312.759L343.465 210.383C349.984 205.364 359.302 207.322 362.408 215.117C378.758 256.231 371.454 305.64 338.925 339.563C306.397 373.487 261.137 380.927 219.768 363.983L174.577 385.803C239.394 432.008 318.104 420.581 367.289 369.251C406.303 328.564 418.386 273.104 407.088 223.091L407.19 223.198C390.807 149.726 411.218 120.359 453.03 60.3072C454.02 58.8833 455.01 57.4595 456 56L400.978 113.382V113.204L210.45 312.794M183.042 337.641C136.519 291.294 144.54 219.567 184.236 178.203C213.59 147.59 261.683 135.096 303.666 153.464L348.755 131.75C340.632 125.627 330.221 119.042 318.275 114.414C264.277 91.2407 199.63 102.774 155.735 148.516C113.513 192.549 100.236 260.254 123.036 318.027C140.069 361.206 112.148 391.748 84.0229 422.575C74.0561 433.503 64.0553 444.431 56 456L183.007 337.677"),
-        ["gemini"] = Geometry.Parse("M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81")
+        ["gemini"] = Geometry.Parse("M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"),
+        ["copilot"] = Geometry.Parse("M23.922 16.997C23.061 18.492 18.063 22.02 12 22.02 5.937 22.02.939 18.492.078 16.997A.641.641 0 0 1 0 16.741v-2.869a.883.883 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656.167-.429.414-1.055.644-1.517a10.098 10.098 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368.397-.406.89-.717 1.474-.952C7.255 2.937 9.248 1.98 11.978 1.98c2.731 0 4.767.957 6.166 2.093.584.235 1.077.546 1.474.952.85.869 1.132 2.037 1.132 3.368 0 .368-.014.733-.052 1.086.23.462.477 1.088.644 1.517 1.258.364 2.233 1.721 2.605 2.656a.841.841 0 0 1 .053.22v2.869a.641.641 0 0 1-.078.256Zm-11.75-5.992h-.344a4.359 4.359 0 0 1-.355.508c-.77.947-1.918 1.492-3.508 1.492-1.725 0-2.989-.359-3.782-1.259a2.137 2.137 0 0 1-.085-.104L4 11.746v6.585c1.435.779 4.514 2.179 8 2.179 3.486 0 6.565-1.4 8-2.179v-6.585l-.098-.104s-.033.045-.085.104c-.793.9-2.057 1.259-3.782 1.259-1.59 0-2.738-.545-3.508-1.492a4.359 4.359 0 0 1-.355-.508Zm2.328 3.25c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1-.549 0-1-.451-1-1v-2c0-.549.451-1 1-1Zm-5 0c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1-.549 0-1-.451-1-1v-2c0-.549.451-1 1-1Zm3.313-6.185c.136 1.057.403 1.913.878 2.497.442.544 1.134.938 2.344.938 1.573 0 2.292-.337 2.657-.751.384-.435.558-1.15.558-2.361 0-1.14-.243-1.847-.705-2.319-.477-.488-1.319-.862-2.824-1.025-1.487-.161-2.192.138-2.533.529-.269.307-.437.808-.438 1.578v.021c0 .265.021.562.063.893Zm-1.626 0c.042-.331.063-.628.063-.894v-.02c-.001-.77-.169-1.271-.438-1.578-.341-.391-1.046-.69-2.533-.529-1.505.163-2.347.537-2.824 1.025-.462.472-.705 1.179-.705 2.319 0 1.211.175 1.926.558 2.361.365.414 1.084.751 2.657.751 1.21 0 1.902-.394 2.344-.938.475-.584.742-1.44.878-2.497Z"),
+        ["opencode"] = Geometry.Parse("M22 24H2V0h20zM17 4.8H7v14.4h10z"),
+        ["kimi"] = Geometry.Parse("m1.053 16.91 9.538 2.55a21 20.981 0 0 0 .06 2.031l5.956 1.592a12 11.99 0 0 1-15.554-6.172m-1.02-5.79 11.352 3.035a21 20.981 0 0 0-.469 2.01l10.817 2.89a12 11.99 0 0 1-1.845 2.004L.658 15.918a12 11.99 0 0 1-.625-4.796m1.593-5.146L13.573 9.17a21 20.981 0 0 0-1.01 1.874l11.297 3.02a21 20.981 0 0 1-.67 2.362l-11.55-3.087L.125 10.26a12 11.99 0 0 1 1.499-4.285ZM6.067 1.58l11.285 3.016a21 20.981 0 0 0-1.688 1.719l7.824 2.091a21 20.981 0 0 1 .513 2.664L2.107 5.218a12 11.99 0 0 1 3.96-3.638M21.68 4.866 7.222 1.003A12 11.99 0 0 1 21.68 4.866"),
+        ["zai"] = Geometry.Parse("M4 3h16v3L8.5 18H20v3H4v-3L15.5 6H4z"),
+        ["openrouter"] = Geometry.Parse("M16.778 1.844v1.919q-.569-.026-1.138-.032-.708-.008-1.415.037c-1.93.126-4.023.728-6.149 2.237-2.911 2.066-2.731 1.95-4.14 2.75-.396.223-1.342.574-2.185.798-.841.225-1.753.333-1.751.333v4.229s.768.108 1.61.333c.842.224 1.789.575 2.185.799 1.41.798 1.228.683 4.14 2.75 2.126 1.509 4.22 2.11 6.148 2.236.88.058 1.716.041 2.555.005v1.918l7.222-4.168-7.222-4.17v2.176c-.86.038-1.611.065-2.278.021-1.364-.09-2.417-.357-3.979-1.465-2.244-1.593-2.866-2.027-3.68-2.508.889-.518 1.449-.906 3.822-2.59 1.56-1.109 2.614-1.377 3.978-1.466.667-.044 1.418-.017 2.278.02v2.176L24 6.014Z"),
+        ["deepseek"] = Geometry.Parse("M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45")
     };
 
     private decimal? _used;
     private decimal? _limit;
     private DateTimeOffset? _resetAt;
+    private string _unit = "回";
     private string _windowLabel = "";
     private string _autoDetail = "";
     private DateTimeOffset? _lastAutoChecked;
     private bool _isVisible = true;
+    private bool _isBalanceOnly;
+    private bool _showProgress = true;
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Name { get; set; } = "";
     public string Accent { get; set; } = "#3451B2";
-    public string Unit { get; set; } = "回";
+    public string Unit
+    {
+        get => _unit;
+        set { _unit = value; OnPropertyChanged(); OnPropertyChanged(nameof(RemainingDisplay)); }
+    }
     public string WindowLabel
     {
         get => _windowLabel;
-        set { _windowLabel = value; OnPropertyChanged(); OnPropertyChanged(nameof(RemainingDisplay)); }
+        set { _windowLabel = value; OnPropertyChanged(); OnPropertyChanged(nameof(RemainingDisplay)); OnPropertyChanged(nameof(ResetDisplay)); }
     }
     public bool IsVisible
     {
         get => _isVisible;
         set { _isVisible = value; OnPropertyChanged(); }
+    }
+    public bool IsBalanceOnly
+    {
+        get => _isBalanceOnly;
+        set
+        {
+            _isBalanceOnly = value;
+            NotifyUsageChanged();
+            OnPropertyChanged(nameof(ResetDisplay));
+        }
+    }
+    public bool ShowProgress
+    {
+        get => _showProgress;
+        set { _showProgress = value; OnPropertyChanged(); OnPropertyChanged(nameof(ProgressVisibility)); }
     }
     public string AutoDetail
     {
@@ -68,7 +97,7 @@ public sealed class ProviderUsage : INotifyPropertyChanged
         set { _resetAt = value; OnPropertyChanged(); OnPropertyChanged(nameof(ResetDisplay)); }
     }
 
-    [JsonIgnore] public bool HasMeasurement => Used.HasValue && Limit is > 0;
+    [JsonIgnore] public bool HasMeasurement => !IsBalanceOnly && Used.HasValue && Limit is > 0;
     [JsonIgnore] public Geometry LogoGeometry => LogoGeometries.TryGetValue(Id, out var geometry) ? geometry : Geometry.Empty;
     [JsonIgnore] public Brush LogoTileBrush => Id.Equals("grok", StringComparison.OrdinalIgnoreCase)
         ? BrushFrom("#050505", "#050505")
@@ -77,8 +106,12 @@ public sealed class ProviderUsage : INotifyPropertyChanged
         ? BrushFrom("#FCFCFC", "#FCFCFC")
         : AccentBrush;
     [JsonIgnore] public double Percent => HasMeasurement ? Math.Clamp((double)(Used!.Value / Limit!.Value * 100), 0, 100) : 0;
-    [JsonIgnore] public string PercentDisplay => HasMeasurement ? $"{Percent:0}%" : "—";
-    [JsonIgnore] public string RemainingDisplay => HasMeasurement ? $"残り {Math.Max(0, Limit!.Value - Used!.Value):0.##} {Unit}" : WindowLabel;
+    [JsonIgnore] public string PercentDisplay => IsBalanceOnly
+        ? (Used.HasValue ? "残高" : "—")
+        : HasMeasurement ? $"{Percent:0}%" : "—";
+    [JsonIgnore] public string RemainingDisplay => IsBalanceOnly
+        ? (Used.HasValue ? $"{Used:0.##} {Unit}" : WindowLabel)
+        : HasMeasurement ? $"残り {Math.Max(0, Limit!.Value - Used!.Value):0.##} {Unit}" : WindowLabel;
     [JsonIgnore] public Brush AccentBrush => BrushFrom(Accent, "#3451B2");
     [JsonIgnore] public Brush StateBrush => !HasMeasurement
         ? BrushFrom("#626264", "#626264")
@@ -87,11 +120,14 @@ public sealed class ProviderUsage : INotifyPropertyChanged
             : Percent >= 70
                 ? BrushFrom("#8A4B00", "#8A4B00")
                 : BrushFrom("#006E54", "#006E54");
-    [JsonIgnore] public string ResetDisplay => ResetAt is null
-        ? "更新 —"
-        : ResetAt <= DateTimeOffset.Now
-            ? "更新時刻を過ぎています"
-            : $"更新まで {FormatDuration(ResetAt.Value - DateTimeOffset.Now)}";
+    [JsonIgnore] public Visibility ProgressVisibility => ShowProgress ? Visibility.Visible : Visibility.Collapsed;
+    [JsonIgnore] public string ResetDisplay => IsBalanceOnly
+        ? (string.IsNullOrWhiteSpace(WindowLabel) ? "残高" : WindowLabel)
+        : ResetAt is null
+            ? "更新 —"
+            : ResetAt <= DateTimeOffset.Now
+                ? "更新時刻を過ぎています"
+                : $"更新まで {FormatDuration(ResetAt.Value - DateTimeOffset.Now)}";
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public void Tick()
@@ -107,6 +143,7 @@ public sealed class ProviderUsage : INotifyPropertyChanged
         OnPropertyChanged(nameof(PercentDisplay));
         OnPropertyChanged(nameof(RemainingDisplay));
         OnPropertyChanged(nameof(StateBrush));
+        OnPropertyChanged(nameof(ProgressVisibility));
     }
 
     private static string FormatDuration(TimeSpan duration)

@@ -16,9 +16,11 @@ public sealed record ProviderAutoResult(
     DateTimeOffset? ResetAt,
     string WindowLabel,
     string Detail,
-    string Status = "自動");
+    string Status = "自動",
+    string Unit = "%",
+    bool IsBalanceOnly = false);
 
-public sealed class AutoUsageService
+public sealed partial class AutoUsageService
 {
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };
 
@@ -32,6 +34,12 @@ public sealed class AutoUsageService
         if (IsEnabled("cursor") || IsEnabled("grok")) tasks.Add(FetchCursorAndGrokAsync(cancellationToken));
         if (IsEnabled("notion")) tasks.Add(FetchNotionAsync(cancellationToken));
         if (IsEnabled("gemini")) tasks.Add(FetchGeminiCliAsync(cancellationToken));
+        if (IsEnabled("opencode")) tasks.Add(FetchOpenCodeGoAsync(cancellationToken));
+        if (IsEnabled("copilot")) tasks.Add(FetchCopilotAsync(cancellationToken));
+        if (IsEnabled("kimi")) tasks.Add(FetchKimiAsync(cancellationToken));
+        if (IsEnabled("zai")) tasks.Add(FetchZaiAsync(cancellationToken));
+        if (IsEnabled("openrouter")) tasks.Add(FetchOpenRouterAsync(cancellationToken));
+        if (IsEnabled("deepseek")) tasks.Add(FetchDeepSeekAsync(cancellationToken));
         var groups = await Task.WhenAll(tasks);
         return groups.SelectMany(item => item).Where(item => IsEnabled(item.ProviderId)).ToList();
     }
@@ -70,42 +78,342 @@ public sealed class AutoUsageService
             var body = JsonSerializer.Serialize(new { spaceId = workspaceId });
             using var usageRequest = NotionRequest("https://app.notion.com/api/v3/getCreditRateLimitStatus", token, body);
             using var usageResponse = await _http.SendAsync(usageRequest, cancellationToken);
+            var windows = new List<NotionWindow>();
+            string? rateError = null;
+            var rateUnauthorized = false;
+            var rateNotApplicable = false;
+
             if (usageResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                return [Missing("notion", "Notion接続の有効期限が切れています。設定から接続情報を更新してください。")];
-            if (!usageResponse.IsSuccessStatusCode)
-                return [Failed("notion", $"Notion usage API: HTTP {(int)usageResponse.StatusCode}")];
-
-            using var document = JsonDocument.Parse(await usageResponse.Content.ReadAsStreamAsync(cancellationToken));
-            var root = document.RootElement;
-            var status = StringProperty(root, "status");
-            if (string.Equals(status, "not_applicable", StringComparison.OrdinalIgnoreCase))
-                return [new("notion", false, null, null, null, "", "Notion AI利用枠はBusiness / Enterpriseワークスペースで利用できます。", "対象外")];
-
-            var windows = new List<(string Label, decimal Percent, DateTimeOffset? Reset)>();
-            if (TryProperty(root, out var rolling, "window"))
             {
-                var used = DecimalProperty(rolling, "used");
-                var limit = DecimalProperty(rolling, "limit");
-                var resetSeconds = DecimalProperty(root, "resetsInSeconds");
-                if (used.HasValue && limit is > 0)
-                    windows.Add(("6時間", used.Value / limit.Value * 100,
-                        resetSeconds.HasValue ? DateTimeOffset.Now.AddSeconds((double)resetSeconds.Value) : null));
+                rateUnauthorized = true;
             }
-            if (TryProperty(root, out var billing, "billingPeriodWindow"))
+            else if (!usageResponse.IsSuccessStatusCode)
             {
-                var used = DecimalProperty(billing, "used");
-                var limit = DecimalProperty(billing, "limit");
-                if (used.HasValue && limit is > 0)
-                    windows.Add(("月次", used.Value / limit.Value * 100, DateProperty(billing, "periodEndMs")));
+                rateError = $"Notion usage API: HTTP {(int)usageResponse.StatusCode}";
             }
-            if (windows.Count == 0) return [Failed("notion", "Notionの利用枠レスポンスを判定できませんでした。")];
-            var tightest = windows.MaxBy(item => item.Percent);
-            var detail = string.Join(" / ", windows.Select(item => $"{item.Label} {item.Percent:0.#}%"));
-            if (!string.IsNullOrWhiteSpace(workspaceName)) detail += $" · {workspaceName}";
-            return [new("notion", true, tightest.Percent, 100, tightest.Reset, tightest.Label, detail)];
+            else
+            {
+                using var document = JsonDocument.Parse(await usageResponse.Content.ReadAsStreamAsync(cancellationToken));
+                var root = document.RootElement;
+                var status = StringProperty(root, "status");
+                if (string.Equals(status, "not_applicable", StringComparison.OrdinalIgnoreCase))
+                {
+                    rateNotApplicable = true;
+                }
+                else
+                {
+                    // November 2026 Standard / Select credits arrive as resolved allowances on the
+                    // same endpoint (`bucketId` auto = Standard, flex = Select). Keep the legacy
+                    // Rolling / Monthly windows when no usable allowance is present.
+                    AddNotionAllowanceWindows(root, windows);
+                    if (windows.Count == 0) AddNotionRateWindows(root, windows);
+                }
+            }
+
+            // Notion credits (and legacy credit groups) live on the eligibility endpoint. Treat it
+            // as optional so workspaces that only expose the allowance response keep working.
+            var eligibility = await FetchNotionEligibilityAsync(token, workspaceId, cancellationToken);
+            if (windows.Count == 0) windows.AddRange(eligibility.Windows);
+            windows = windows
+                .GroupBy(item => item.Label, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.MaxBy(item => item.Percent)!)
+                .ToList();
+
+            if (windows.Count == 0)
+            {
+                if (rateNotApplicable)
+                    return [new("notion", false, null, null, null, "", "Notion AI利用枠はBusiness / Enterpriseワークスペースで利用できます。", "対象外")];
+                if (eligibility.Balance is decimal balance)
+                    return
+                    [
+                        new("notion", true, balance, null, null, "Notionクレジット残高",
+                            BuildNotionDetail([], eligibility, workspaceName), "自動", "クレジット", true)
+                    ];
+                if (rateUnauthorized)
+                    return [Missing("notion", "Notion接続の有効期限が切れています。設定から接続情報を更新してください。")];
+                return [Failed("notion", rateError ?? "Notionの利用枠レスポンスを判定できませんでした。")];
+            }
+
+            var tightest = windows.MaxBy(item => item.Percent)!;
+            return [new("notion", true, tightest.Percent, 100, tightest.Reset, tightest.Label,
+                BuildNotionDetail(windows, eligibility, workspaceName))];
         }
         catch (Exception ex) { return [Failed("notion", SafeMessage("Notion", ex))]; }
     }
+
+    private async Task<NotionEligibility> FetchNotionEligibilityAsync(string token, string workspaceId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var body = JsonSerializer.Serialize(new { spaceId = workspaceId });
+            using var request = NotionRequest("https://app.notion.com/api/v3/getAIUsageEligibilityV2", token, body);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode) return new([], null, null);
+            using var document = JsonDocument.Parse(await response.Content.ReadAsStreamAsync(cancellationToken));
+            return ParseNotionEligibility(document.RootElement);
+        }
+        catch
+        {
+            return new([], null, null);
+        }
+    }
+
+    private static NotionEligibility ParseNotionEligibility(JsonElement root)
+    {
+        var windows = new List<NotionWindow>();
+        AddNotionCreditGroup(root, "standardCredits", "standard_credits", "Standard", windows);
+        AddNotionCreditGroup(root, "selectCredits", "select_credits", "Select", windows);
+        // Older eligibility payloads use basic/premium credit groups. Only accept them when the
+        // numbers look like a current allowance instead of lifetime usage.
+        AddNotionPlausibleCredit(root, "basicCredits", "basic_credits", "Standard", windows);
+        AddNotionPlausibleCredit(root, "premiumCredits", "premium_credits", "Select", windows);
+
+        decimal? balance = null;
+        if (TryProperty(root, out var premium, "premiumCredits", "premium_credits"))
+            balance = DecimalProperty(premium, "totalCreditBalance", "total_credit_balance");
+        if (balance is null && TryProperty(root, out var usage, "usage"))
+            balance = DecimalProperty(usage, "totalCreditBalance", "total_credit_balance");
+        if (balance is null)
+            AddNotionBalanceGroup(root, "notionCredits", "notion_credits", out balance);
+
+        string? detail = null;
+        if (TryProperty(root, out var detailSource, "premiumCredits", "premium_credits"))
+        {
+            var overage = DecimalProperty(detailSource, "creditsInOverage", "credits_in_overage");
+            if (overage is > 0) detail = $"Notionクレジット超過 {overage:0.##}";
+        }
+        return new(windows, detail, balance);
+    }
+
+    private static void AddNotionCreditGroup(JsonElement root, string camelName, string snakeName, string label, List<NotionWindow> target)
+    {
+        if (!TryProperty(root, out var group, camelName, snakeName) || group.ValueKind != JsonValueKind.Object) return;
+        var used = DecimalProperty(group, "userUsage", "user_usage", "used", "usage");
+        var limit = DecimalProperty(group, "userLimit", "user_limit", "limit", "total");
+        if (used is null || limit is not > 0)
+        {
+            used = DecimalProperty(group, "spaceUsage", "space_usage");
+            limit = DecimalProperty(group, "spaceLimit", "space_limit");
+        }
+        if ((used is null || limit is not > 0) &&
+            TryProperty(group, out var perSource, "perSource", "per_source") &&
+            TryProperty(perSource, out var monthly, "monthlyAllocated", "monthly_allocated"))
+        {
+            used = DecimalProperty(monthly, "usageTotal", "usage_total");
+            limit = DecimalProperty(monthly, "limit", "totalLimit");
+        }
+        if (used is null || limit is not > 0) return;
+        var reset = DateProperty(group, "periodEndMs", "period_end_ms", "servicePeriodEndMs",
+            "service_period_end_ms", "nextResetTime", "resetsAt", "reset_at");
+        target.Add(new(label, used.Value / limit.Value * 100, reset));
+    }
+
+    private static void AddNotionPlausibleCredit(JsonElement root, string camelName, string snakeName, string label, List<NotionWindow> target)
+    {
+        if (!TryProperty(root, out var group, camelName, snakeName) || group.ValueKind != JsonValueKind.Object) return;
+        var candidates = new List<(decimal Used, decimal Limit)>();
+        AddNotionCandidate(candidates, group, "userUsage", "user_usage", "userLimit", "user_limit");
+        AddNotionCandidate(candidates, group, "spaceUsage", "space_usage", "spaceLimit", "space_limit");
+        AddNotionCandidate(candidates, group, "used", "usage", "limit", "total");
+        if (TryProperty(group, out var perSource, "perSource", "per_source") &&
+            TryProperty(perSource, out var monthly, "monthlyAllocated", "monthly_allocated"))
+            AddNotionCandidate(candidates, monthly, "usageTotal", "usage_total", "limit", "limit");
+
+        var chosen = candidates.FirstOrDefault(item => item.Limit > 0 && item.Used >= 0 && item.Used / item.Limit <= 1.5m);
+        if (chosen.Limit <= 0) return;
+        var reset = DateProperty(group, "periodEndMs", "period_end_ms", "servicePeriodEndMs",
+            "service_period_end_ms", "nextResetTime", "resetsAt", "reset_at");
+        target.Add(new(label, chosen.Used / chosen.Limit * 100, reset));
+    }
+
+    private static void AddNotionCandidate(List<(decimal Used, decimal Limit)> target, JsonElement element,
+        string usedCamel, string usedSnake, string limitCamel, string limitSnake)
+    {
+        var used = DecimalProperty(element, usedCamel, usedSnake);
+        var limit = DecimalProperty(element, limitCamel, limitSnake);
+        if (used.HasValue && limit is > 0) target.Add((used.Value, limit.Value));
+    }
+
+    private static void AddNotionBalanceGroup(JsonElement root, string camelName, string snakeName, out decimal? balance)
+    {
+        balance = null;
+        if (!TryProperty(root, out var group, camelName, snakeName) || group.ValueKind != JsonValueKind.Object) return;
+        balance = DecimalProperty(group, "totalCreditBalance", "total_credit_balance", "balance", "available", "remaining");
+    }
+
+    private static string BuildNotionDetail(IEnumerable<NotionWindow> windows, NotionEligibility eligibility, string? workspaceName)
+    {
+        var parts = windows.Select(item => $"{item.Label} {item.Percent:0.#}%").ToList();
+        if (eligibility.Balance is decimal balance) parts.Add($"Notionクレジット残り {balance:0.##}");
+        if (!string.IsNullOrWhiteSpace(eligibility.Detail)) parts.Add(eligibility.Detail);
+        if (!string.IsNullOrWhiteSpace(workspaceName)) parts.Add(workspaceName);
+        return string.Join(" / ", parts);
+    }
+
+    private static void AddNotionAllowanceWindows(JsonElement root, List<NotionWindow> target)
+    {
+        JsonElement allowances;
+        if (TryProperty(root, out var direct, "allowances"))
+        {
+            allowances = direct;
+        }
+        else if (TryProperty(root, out var data, "data") && data.ValueKind == JsonValueKind.Object &&
+                 TryProperty(data, out var nested, "allowances"))
+        {
+            allowances = nested;
+        }
+        else
+        {
+            return;
+        }
+
+        var items = new List<JsonElement>();
+        if (allowances.ValueKind == JsonValueKind.Array) items.AddRange(allowances.EnumerateArray());
+        else if (allowances.ValueKind == JsonValueKind.Object)
+            foreach (var property in allowances.EnumerateObject()) items.Add(property.Value);
+
+        foreach (var item in items)
+        {
+            if (item.ValueKind != JsonValueKind.Object) continue;
+            var label = NotionAllowanceLabel(StringProperty(item, "bucketId", "bucket_id", "bucket", "id", "type"));
+            if (label is null) continue;
+
+            // Notion asks clients to keep the legacy windows while a bucket is not resolved.
+            var state = StringProperty(item, "state", "status");
+            if (!string.IsNullOrWhiteSpace(state) && !state.Equals("resolved", StringComparison.OrdinalIgnoreCase)) continue;
+
+            var source = TryProperty(item, out var usage, "usage", "detail") && usage.ValueKind == JsonValueKind.Object
+                ? usage
+                : item;
+            var used = DecimalProperty(source, "used", "usage", "usedCredits", "creditsUsed", "currentUsage", "userUsage", "spaceUsage", "consumed");
+            var limit = DecimalProperty(source, "limit", "totalLimit", "total_limit", "creditsLimit", "entitlement", "total", "allowance");
+            if (used is null)
+                used = DecimalProperty(item, "used", "usage", "usedCredits", "creditsUsed", "currentUsage", "userUsage", "spaceUsage", "consumed");
+            if (limit is null)
+                limit = DecimalProperty(item, "limit", "totalLimit", "total_limit", "creditsLimit", "entitlement", "total", "allowance");
+
+            var percent = DecimalProperty(source, "percent", "usedPercent", "usagePercent")
+                ?? DecimalProperty(item, "percent", "usedPercent", "usagePercent");
+            if (percent is not null)
+            {
+                used = percent;
+                limit = 100;
+            }
+            if (used is null && limit is > 0)
+            {
+                var remaining = DecimalProperty(source, "remaining", "remainingCredits", "balance")
+                    ?? DecimalProperty(item, "remaining", "remainingCredits", "balance");
+                if (remaining.HasValue) used = limit - remaining.Value;
+            }
+            if (used is null || limit is not > 0) continue;
+
+            var reset = DateProperty(item, "periodEndMs", "period_end_ms", "servicePeriodEndMs", "service_period_end_ms",
+                "resetsAt", "resets_at", "reset_at", "resetTime", "nextResetTime")
+                ?? DateProperty(source, "periodEndMs", "period_end_ms", "servicePeriodEndMs", "service_period_end_ms",
+                    "resetsAt", "resets_at", "reset_at", "resetTime", "nextResetTime");
+            target.Add(new(label, used.Value / limit.Value * 100, reset));
+        }
+    }
+
+    private static string? NotionAllowanceLabel(string? bucket) => bucket?.Trim().ToLowerInvariant() switch
+    {
+        "auto" => "Standard",
+        "flex" => "Select",
+        _ => null
+    };
+
+    private static void AddNotionRateWindows(JsonElement root, List<NotionWindow> target)
+    {
+        var resetSeconds = DecimalProperty(root, "resetsInSeconds", "resets_in_seconds");
+        AddNotionWindowAt(root, "window", target, resetSeconds);
+        AddNotionWindowAt(root, "billingPeriodWindow", target, null);
+        AddNotionWindowAt(root, "standardWindow", target, resetSeconds);
+        AddNotionWindowAt(root, "selectWindow", target, resetSeconds);
+        AddNotionWindowAt(root, "standardBillingPeriodWindow", target, null);
+        AddNotionWindowAt(root, "selectBillingPeriodWindow", target, null);
+
+        foreach (var property in root.EnumerateObject())
+        {
+            if (property.Value.ValueKind != JsonValueKind.Object) continue;
+            if (property.Name is "window" or "billingPeriodWindow" or "standardWindow" or "selectWindow"
+                or "standardBillingPeriodWindow" or "selectBillingPeriodWindow") continue;
+            if (property.Name is "limits" or "dependencies" or "usage" or "perSource") continue;
+            if (LooksLikeNotionWindow(property.Value))
+                TryAddNotionWindow(property.Value, property.Name, target, null);
+        }
+    }
+
+    private static void AddNotionWindowAt(JsonElement parent, string name, List<NotionWindow> target, decimal? resetSeconds)
+    {
+        if (!TryProperty(parent, out var window, name) || window.ValueKind != JsonValueKind.Object) return;
+        TryAddNotionWindow(window, name, target, resetSeconds);
+    }
+
+    private static bool LooksLikeNotionWindow(JsonElement element) =>
+        DecimalProperty(element, "used", "usage", "currentValue", "userUsage", "spaceUsage").HasValue &&
+        DecimalProperty(element, "limit", "entitlement", "total", "userLimit", "spaceLimit").HasValue;
+
+    private static void TryAddNotionWindow(JsonElement element, string propertyName, List<NotionWindow> target, decimal? resetSeconds)
+    {
+        if (!TryReadNotionWindow(element, propertyName, out var window)) return;
+        if (window.Reset is null && resetSeconds.HasValue && propertyName.Contains("window", StringComparison.OrdinalIgnoreCase))
+            window = window with { Reset = DateTimeOffset.Now.AddSeconds((double)resetSeconds.Value) };
+        target.Add(window);
+    }
+
+    private static bool TryReadNotionWindow(JsonElement element, string propertyName, out NotionWindow window)
+    {
+        window = default!;
+        if (element.ValueKind != JsonValueKind.Object) return false;
+
+        var used = DecimalProperty(element, "used", "usage", "currentValue", "userUsage", "spaceUsage");
+        var limit = DecimalProperty(element, "limit", "entitlement", "total", "userLimit", "spaceLimit", "totalLimit");
+        var remaining = DecimalProperty(element, "remaining", "remainingCount", "remaining_credits");
+        if (used is null && limit is > 0 && remaining.HasValue) used = limit - remaining;
+        if (used is null || limit is not > 0) return false;
+
+        var creditType = StringProperty(element, "creditType", "credit_type", "type");
+        var cadence = StringProperty(element, "cadence", "window");
+        var label = NotionWindowLabel(propertyName, creditType, cadence);
+        var reset = DateProperty(element, "periodEndMs", "period_end_ms", "servicePeriodEndMs", "service_period_end_ms",
+            "resetsAt", "resets_at", "reset_at", "nextResetTime", "resetTime");
+        window = new(label, used.Value / limit.Value * 100, reset);
+        return true;
+    }
+
+    private static string NotionWindowLabel(string propertyName, string? creditType, string? cadence)
+    {
+        var credit = NotionCreditLabel(creditType);
+        if (string.IsNullOrWhiteSpace(credit))
+        {
+            if (propertyName.Contains("standard", StringComparison.OrdinalIgnoreCase)) credit = "Standard";
+            else if (propertyName.Contains("select", StringComparison.OrdinalIgnoreCase)) credit = "Select";
+            else if (propertyName.Contains("notion", StringComparison.OrdinalIgnoreCase)) credit = "Notion";
+        }
+
+        string? period = null;
+        var source = $"{propertyName} {cadence}".ToLowerInvariant();
+        if (source.Contains("billing") || source.Contains("month")) period = "月次";
+        else if (source.Contains("6h") || source.Contains("6時間") || propertyName.Equals("window", StringComparison.OrdinalIgnoreCase)) period = "6時間";
+        else if (source.Contains("week")) period = "週次";
+        else if (source.Contains("day")) period = "日次";
+
+        if (!string.IsNullOrWhiteSpace(credit) && period is not null) return $"{credit} {period}";
+        return credit ?? period ?? "利用枠";
+    }
+
+    private static string? NotionCreditLabel(string? creditType)
+    {
+        if (string.IsNullOrWhiteSpace(creditType)) return null;
+        if (creditType.Contains("standard", StringComparison.OrdinalIgnoreCase)) return "Standard";
+        if (creditType.Contains("select", StringComparison.OrdinalIgnoreCase)) return "Select";
+        if (creditType.Contains("notion", StringComparison.OrdinalIgnoreCase) ||
+            creditType.Contains("premium", StringComparison.OrdinalIgnoreCase)) return "Notion";
+        return null;
+    }
+
+    private sealed record NotionWindow(string Label, decimal Percent, DateTimeOffset? Reset);
+    private sealed record NotionEligibility(List<NotionWindow> Windows, string? Detail, decimal? Balance);
 
     public async Task<IReadOnlyList<ProviderAutoResult>> FetchGeminiCliAsync(CancellationToken cancellationToken = default)
     {
@@ -460,7 +768,7 @@ public sealed class AutoUsageService
         request.Headers.TryAddWithoutValidation("Cookie", $"token_v2={token}");
         request.Headers.TryAddWithoutValidation("Origin", "https://app.notion.com");
         request.Headers.Referrer = new Uri("https://app.notion.com/");
-        request.Headers.UserAgent.ParseAdd("AIUsageChecker/1.1");
+        request.Headers.UserAgent.ParseAdd("AIUsageChecker/1.4");
         request.Content = new StringContent(json, Encoding.UTF8, "application/json");
         return request;
     }

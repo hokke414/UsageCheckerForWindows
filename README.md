@@ -1,6 +1,6 @@
 # AI Usage Checker for Windows
 
-Claude、ChatGPT / Codex、Notion AI、Cursor（Grok Botを含む）、Geminiの利用枠を、小さなWindowsウィンドウでまとめて確認する非公式デスクトップアプリです。
+Claude、ChatGPT / Codex、Notion AI、Cursor（Grok Botを含む）、Gemini、OpenCode Go、GitHub Copilot、Kimi Code、Z.ai GLM、OpenRouter、DeepSeekの利用枠と残高を、小さなWindowsウィンドウでまとめて確認する非公式デスクトップアプリです。
 
 ## ダウンロード
 
@@ -18,6 +18,8 @@ Windows SmartScreenが表示される場合があります。本プロジェク�
 - 設定画面でサービスごとに表示・非表示を選択
 - 非表示サービスのバックグラウンド取得を停止
 - Notion AIとGemini Appsのアプリ内ログイン
+- OpenCode Go、GitHub Copilot、Kimi Code、Z.ai GLMのサブスクリプション利用枠
+- OpenRouter、DeepSeekのクレジット・残高表示
 - ブランドロゴ、使用率、残量、リセット時刻だけをコンパクトなカードで表示
 - オフライン時も前回の取得結果を表示
 - 予期しない終了の診断ログ
@@ -34,6 +36,12 @@ UIは[デジタル庁デザインシステム](https://design.digital.go.jp/dads
 | Grok Bot (Cursor) | 対応 | Cursor DashboardのGrok Bot枠 |
 | Notion AI | 対応 | アプリ内ログインまたは明示的に登録したNotionセッション |
 | Gemini | 対応 | Gemini AppsのUsage画面。Gemini CLI OAuthクォータをフォールバック利用 |
+| OpenCode Go | 対応 | OpenCodeのローカル認証、APIキー、または環境変数 |
+| GitHub Copilot | 対応 | OpenCode / GitHub CLIのローカル認証 |
+| Kimi Code | 対応 | Kimi Code CLIのローカル認証、APIキー、または環境変数 |
+| Z.ai GLM Coding Plan | 対応 | APIキー、またはOpenCodeのZ.ai認証 |
+| OpenRouter | 対応 | APIキー、またはOpenCodeのローカル認証 |
+| DeepSeek | 対応 | APIキー、またはOpenCodeのローカル認証 |
 
 自動取得できなかった場合も前回値を維持し、カードへ理由を表示します。各社の非公開APIや画面構造に依存する連携は、サービス側の変更で一時的に利用できなくなることがあります。
 
@@ -45,7 +53,9 @@ UIは[デジタル庁デザインシステム](https://design.digital.go.jp/dads
 2. ［Notionにログイン］を押し、表示されたNotion画面でログインします。
 3. ログイン完了後、セッションはWindows資格情報マネージャーへ保存されます。
 
-自動ログインを利用できない場合は、NotionのUsageリクエストを開発者ツールから「Copy as cURL」でコピーし、接続欄へ貼り付けることもできます。取得対象は対応プランのNotion AI利用枠です。
+自動ログインを利用できない場合は、NotionのUsageリクエストを開発者ツールから「Copy as cURL」でコピーし、接続欄へ貼り付けることもできます。
+
+2026年11月2日以降のBusiness / Enterpriseプランでは、Standardクレジット（月1,500目安）とSelectクレジット（月500目安）が個別に付与され、Notionクレジットはワークスペース共有の残高として扱われます。本アプリはUsageレスポンスの解決済みallowance（`auto` / `flex`）からStandard / Selectの使用率を取得し、Notionクレジット残高を合わせて表示します。allowanceが未解決または利用できない場合は、従来の6時間・月次枠へフォールバックします。Enterpriseの付与量や移行時期によってレスポンスが異なる場合は、利用枠を取得できないことがあります。
 
 ### Gemini
 
@@ -55,11 +65,23 @@ UIは[デジタル庁デザインシステム](https://design.digital.go.jp/dads
 
 以後、起動時と5分ごとに `gemini.google.com/usage` の表示から5時間・週次枠を読み取ります。Geminiを非表示にするとWebViewも起動しません。Gemini CLIへログイン済みの場合は、Apps側を取得できなかったときにCode Assistクォータを利用します。
 
+### OpenCode Go / Copilot / Kimi Code / Z.ai / OpenRouter / DeepSeek
+
+OpenCode、GitHub CLI、Kimi Code CLIの既存ログインがある場合は、追加設定なしで自動検出します。APIキーを使うサービスは、［設定］の「APIキー（任意）」欄へ入力してください。キーはWindows資格情報マネージャーへ保存され、設定画面には再表示されません。
+
+- OpenCode Go: `OPENCODE_GO_API_KEY` または `OPENCODE_API_KEY`
+- Kimi Code: `KIMI_CODE_API_KEY`
+- Z.ai: `Z_AI_API_KEY`（中国本土は `BIGMODEL_API_KEY` / `ZHIPU_API_KEY` なども検出）
+- OpenRouter: `OPENROUTER_API_KEY`
+- DeepSeek: `DEEPSEEK_API_KEY` または `DEEPSEEK_KEY`
+
+CopilotはGitHub OAuthのローカル認証を使用するため、APIキー欄はありません。OpenCode Goの利用枠は5時間・週次・月次のうち最も使用率が高い枠をカードに表示し、内訳をツールチップに表示します。
+
 ## プライバシー
 
 このリポジトリとRelease exeには、開発者のログイン情報、利用履歴、ブラウザプロファイル、ローカルパスを含めません。アプリには分析・広告・開発者運営サーバーへの送信機能もありません。
 
-既存のCodex、Claude Code、Cursor、Gemini CLI認証はローカルで読み取り、各サービス自身の使用量取得にだけ使います。Notionセッションは明示的な接続時だけWindows資格情報マネージャーへ保存します。詳細と削除方法は [PRIVACY.md](PRIVACY.md) を参照してください。
+既存のCodex、Claude Code、Cursor、Gemini CLI、OpenCode、GitHub CLI、Kimi Code CLI認証はローカルで読み取り、各サービス自身の使用量取得にだけ使います。Notionセッションと設定画面で入力したAPIキーはWindows資格情報マネージャーへ保存します。詳細と削除方法は [PRIVACY.md](PRIVACY.md) を参照してください。
 
 ## ソースから実行
 
@@ -90,6 +112,7 @@ dotnet publish UsageChecker.csproj -c Release -r win-x64 --self-contained false 
 
 - 設定と利用量キャッシュ: `%LOCALAPPDATA%\AIUsageChecker`
 - Notion認証: Windows資格情報マネージャーの `AIUsageChecker/Notion`
+- APIキー: Windows資格情報マネージャーの `AIUsageChecker/ProviderApiKey/<provider>`
 - クラッシュログ: `%LOCALAPPDATA%\AIUsageChecker\crash.log`
 
 ## ライセンス

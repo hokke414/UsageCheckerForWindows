@@ -101,9 +101,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (provider is null) return;
         provider.AutoDetail = result.Detail;
         if (!result.Success) return;
+        provider.Unit = string.IsNullOrWhiteSpace(result.Unit) ? "%" : result.Unit;
+        provider.IsBalanceOnly = result.IsBalanceOnly;
+        provider.ShowProgress = !result.IsBalanceOnly;
         provider.Used = result.Used;
         provider.Limit = result.Limit;
-        provider.Unit = "%";
         provider.ResetAt = result.ResetAt;
         provider.WindowLabel = result.WindowLabel;
         provider.LastAutoChecked = DateTimeOffset.Now;

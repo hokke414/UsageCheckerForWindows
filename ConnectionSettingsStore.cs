@@ -30,6 +30,30 @@ public sealed class ConnectionSettingsStore
 
     public void RemoveNotionToken() => WindowsCredential.Delete(CredentialTarget);
 
+    public string? LoadApiKey(string providerId) => WindowsCredential.Read(ApiCredentialTarget(providerId));
+
+    public void SaveApiKey(string providerId, string input)
+    {
+        var key = ExtractApiKey(input);
+        if (string.IsNullOrWhiteSpace(key))
+            throw new InvalidOperationException("APIキーを確認できません。キー本体、またはAuthorizationヘッダーを貼り付けてください。");
+        WindowsCredential.Write(ApiCredentialTarget(providerId), key);
+    }
+
+    public void RemoveApiKey(string providerId) => WindowsCredential.Delete(ApiCredentialTarget(providerId));
+
+    private static string ApiCredentialTarget(string providerId) => $"AIUsageChecker/ProviderApiKey/{providerId}";
+
+    private static string? ExtractApiKey(string input)
+    {
+        var value = input.Trim();
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var header = Regex.Match(value, @"(?:Authorization\s*:\s*)?Bearer\s+([^\s'\""]+)", RegexOptions.IgnoreCase);
+        if (header.Success) return header.Groups[1].Value.Trim();
+        if (value.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) value = value[7..].Trim();
+        return value.Trim('"', '\'');
+    }
+
     public async Task<ConnectionSettings> LoadAsync()
     {
         try

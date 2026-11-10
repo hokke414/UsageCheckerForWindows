@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace AIUsageChecker;
 
@@ -14,12 +15,14 @@ public partial class SettingsWindow : Window, INotifyPropertyChanged
     private string _notionWorkspaceId = "";
     private string _notionStatus = "未接続";
     private string _geminiStatus = "ログイン情報なし";
+    private string _apiKeyStatus = "未設定";
     private string _errorText = "";
 
     public ObservableCollection<ProviderOption> ProviderOptions { get; } = [];
     public string NotionWorkspaceId { get => _notionWorkspaceId; set { _notionWorkspaceId = value; OnPropertyChanged(); } }
     public string NotionStatus { get => _notionStatus; set { _notionStatus = value; OnPropertyChanged(); } }
     public string GeminiStatus { get => _geminiStatus; set { _geminiStatus = value; OnPropertyChanged(); } }
+    public string ApiKeyStatus { get => _apiKeyStatus; set { _apiKeyStatus = value; OnPropertyChanged(); } }
     public string ErrorText { get => _errorText; set { _errorText = value; OnPropertyChanged(); } }
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -41,6 +44,50 @@ public partial class SettingsWindow : Window, INotifyPropertyChanged
         var geminiPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gemini", "oauth_creds.json");
         var webProfile = Directory.Exists(WebViewProfiles.GeminiDataPath);
         GeminiStatus = webProfile ? "Geminiログイン用プロファイルを検出" : File.Exists(geminiPath) ? "Gemini CLIログインを検出" : "ログインが必要";
+        UpdateApiKeyStatus();
+    }
+
+    private void UpdateApiKeyStatus()
+    {
+        var labels = new (string Id, string Name)[]
+        {
+            ("opencode", "OpenCode Go"),
+            ("kimi", "Kimi Code"),
+            ("zai", "Z.ai"),
+            ("openrouter", "OpenRouter"),
+            ("deepseek", "DeepSeek")
+        };
+        var configured = labels
+            .Where(item => !string.IsNullOrWhiteSpace(_connectionStore.LoadApiKey(item.Id)))
+            .Select(item => item.Name)
+            .ToList();
+        ApiKeyStatus = configured.Count == 0
+            ? "APIキーは未設定です。ローカルのログイン情報がある場合は自動で検出します。"
+            : $"保存済み: {string.Join(", ", configured)}";
+    }
+
+    private void SaveApiKeyIfPresent(string providerId, PasswordBox box)
+    {
+        if (!string.IsNullOrWhiteSpace(box.Password))
+            _connectionStore.SaveApiKey(providerId, box.Password);
+    }
+
+    private PasswordBox? ApiKeyBox(string providerId) => providerId switch
+    {
+        "opencode" => OpenCodeKeyBox,
+        "kimi" => KimiKeyBox,
+        "zai" => ZaiKeyBox,
+        "openrouter" => OpenRouterKeyBox,
+        "deepseek" => DeepSeekKeyBox,
+        _ => null
+    };
+
+    private void ClearApiKey_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string providerId }) return;
+        _connectionStore.RemoveApiKey(providerId);
+        ApiKeyBox(providerId)?.Clear();
+        UpdateApiKeyStatus();
     }
 
     private async void Save_Click(object sender, RoutedEventArgs e)
@@ -50,6 +97,11 @@ public partial class SettingsWindow : Window, INotifyPropertyChanged
         {
             if (!string.IsNullOrWhiteSpace(NotionTokenBox.Password))
                 _connectionStore.SaveNotionToken(NotionTokenBox.Password);
+            SaveApiKeyIfPresent("opencode", OpenCodeKeyBox);
+            SaveApiKeyIfPresent("kimi", KimiKeyBox);
+            SaveApiKeyIfPresent("zai", ZaiKeyBox);
+            SaveApiKeyIfPresent("openrouter", OpenRouterKeyBox);
+            SaveApiKeyIfPresent("deepseek", DeepSeekKeyBox);
             await _connectionStore.SaveAsync(new ConnectionSettings { NotionWorkspaceId = NotionWorkspaceId.Trim() });
             foreach (var option in ProviderOptions)
             {

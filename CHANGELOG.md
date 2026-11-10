@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0 - 2026-11-10
+
+- Updated Notion AI for the November 2026 Standard, Select, and Notion credit system: reads resolved `auto` / `flex` allowances for Standard and Select, falls back to the legacy Rolling / Monthly windows, and shows the Notion credit balance from the optional eligibility endpoint.
+- Added OpenCode Go subscription usage for rolling, weekly, and monthly windows.
+- Added GitHub Copilot, Kimi Code, and Z.ai GLM Coding Plan usage tracking with local credential discovery.
+- Added OpenRouter credit usage and DeepSeek balance cards.
+- Added optional API-key fields stored in Windows Credential Manager for OpenCode Go, Kimi Code, Z.ai, OpenRouter, and DeepSeek.
+- Added balance-only card rendering so credit balances hide the percentage progress bar.
+
 ## 1.3.0 - 2026-10-02
 
 - Changed the primary action to a pale blue surface with dark text for improved readability.

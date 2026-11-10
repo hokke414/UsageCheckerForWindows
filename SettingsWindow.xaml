@@ -1,7 +1,7 @@
 <Window x:Class="AIUsageChecker.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AI Usage Checker 設定" Width="660" Height="760" MinWidth="580" MinHeight="620"
+        Title="AI Usage Checker 設定" Width="660" Height="780" MinWidth="580" MinHeight="620"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize" ShowInTaskbar="False"
         Background="{StaticResource AppBackground}" Foreground="{StaticResource TextPrimary}"
         Icon="Assets/app-icon.ico">
@@ -31,7 +31,7 @@
         </ItemsControl>
 
         <TextBlock Text="Notion AI 接続" FontSize="18" FontWeight="Bold" Margin="0,18,0,6"/>
-        <TextBlock Text="Notionにログイン後、使用量リクエストのCopy as cURL、Cookieヘッダー、またはtoken_v2を貼り付けます。Windows資格情報として暗号化保存します。"
+        <TextBlock Text="NotionのStandard / SelectクレジットとNotionクレジット残高を取得します。Notionにログイン後、使用量リクエストのCopy as cURL、Cookieヘッダー、またはtoken_v2を貼り付けます。Windows資格情報として暗号化保存します。"
                    Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21" Margin="0,0,0,12"/>
         <PasswordBox x:Name="NotionTokenBox" MinHeight="44" Padding="12,10" Background="{StaticResource Surface}" Foreground="{StaticResource TextPrimary}"
                      BorderBrush="{StaticResource Border}" PasswordChar="●" AutomationProperties.Name="Notion接続情報"/>
@@ -52,6 +52,52 @@
           <Button Style="{StaticResource SecondaryButton}" Content="Gemini CLIを起動" Click="OpenGemini_Click"/>
         </StackPanel>
         <TextBlock Text="{Binding GeminiStatus}" Foreground="{StaticResource TextSecondary}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+
+        <TextBlock Text="APIキー（任意）" FontSize="18" FontWeight="Bold" Margin="0,24,0,6"/>
+        <TextBlock Text="OpenCode Go、Kimi Code、Z.ai / GLM、OpenRouter、DeepSeekは、ローカルのログイン情報または下のAPIキーから自動取得します。入力したキーはWindows資格情報マネージャーへ保存され、空欄のまま保存すると既存のキーを維持します。"
+                   Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" LineHeight="21" Margin="0,0,0,12"/>
+
+        <TextBlock Text="OpenCode Go" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
+        <Grid Margin="0,0,0,10">
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <PasswordBox x:Name="OpenCodeKeyBox" MinHeight="40" Padding="12,8" Background="{StaticResource Surface}" Foreground="{StaticResource TextPrimary}"
+                       BorderBrush="{StaticResource Border}" PasswordChar="●" AutomationProperties.Name="OpenCode Go APIキー"/>
+          <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="解除" Tag="opencode" Click="ClearApiKey_Click" Margin="8,0,0,0"/>
+        </Grid>
+
+        <TextBlock Text="Kimi Code" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
+        <Grid Margin="0,0,0,10">
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <PasswordBox x:Name="KimiKeyBox" MinHeight="40" Padding="12,8" Background="{StaticResource Surface}" Foreground="{StaticResource TextPrimary}"
+                       BorderBrush="{StaticResource Border}" PasswordChar="●" AutomationProperties.Name="Kimi Code APIキー"/>
+          <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="解除" Tag="kimi" Click="ClearApiKey_Click" Margin="8,0,0,0"/>
+        </Grid>
+
+        <TextBlock Text="Z.ai / GLM Coding Plan" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
+        <Grid Margin="0,0,0,10">
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <PasswordBox x:Name="ZaiKeyBox" MinHeight="40" Padding="12,8" Background="{StaticResource Surface}" Foreground="{StaticResource TextPrimary}"
+                       BorderBrush="{StaticResource Border}" PasswordChar="●" AutomationProperties.Name="Z.ai APIキー"/>
+          <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="解除" Tag="zai" Click="ClearApiKey_Click" Margin="8,0,0,0"/>
+        </Grid>
+
+        <TextBlock Text="OpenRouter" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
+        <Grid Margin="0,0,0,10">
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <PasswordBox x:Name="OpenRouterKeyBox" MinHeight="40" Padding="12,8" Background="{StaticResource Surface}" Foreground="{StaticResource TextPrimary}"
+                       BorderBrush="{StaticResource Border}" PasswordChar="●" AutomationProperties.Name="OpenRouter APIキー"/>
+          <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="解除" Tag="openrouter" Click="ClearApiKey_Click" Margin="8,0,0,0"/>
+        </Grid>
+
+        <TextBlock Text="DeepSeek" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,6"/>
+        <Grid Margin="0,0,0,10">
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <PasswordBox x:Name="DeepSeekKeyBox" MinHeight="40" Padding="12,8" Background="{StaticResource Surface}" Foreground="{StaticResource TextPrimary}"
+                       BorderBrush="{StaticResource Border}" PasswordChar="●" AutomationProperties.Name="DeepSeek APIキー"/>
+          <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="解除" Tag="deepseek" Click="ClearApiKey_Click" Margin="8,0,0,0"/>
+        </Grid>
+
+        <TextBlock Text="{Binding ApiKeyStatus}" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap" Margin="0,4,0,0"/>
 
         <TextBlock Text="{Binding ErrorText}" Foreground="#B4002A" TextWrapping="Wrap" Margin="0,16,0,0" LineHeight="21"/>
       </StackPanel>
