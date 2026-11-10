@@ -212,7 +212,7 @@ public sealed partial class AutoUsageService
                 var label = StringProperty(item, "scope") is { } scope && scope.Contains("CODING", StringComparison.OrdinalIgnoreCase)
                     ? "Kimi Code"
                     : "利用枠";
-                if (TryProperty(item, out var detail, "detail")) AddKimiDetail(detail, windows, label);
+                if (TryProperty(item, out var detailSource, "detail")) AddKimiDetail(detailSource, windows, label);
                 if (TryProperty(item, out var nestedLimits, "limits") && nestedLimits.ValueKind == JsonValueKind.Array)
                     foreach (var limit in nestedLimits.EnumerateArray()) AddKimiLimit(limit, windows, label);
                 AddKimiRatio(item, windows);
